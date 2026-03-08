@@ -27,7 +27,7 @@ export const auth = {
   register: (data) => fetch(`${BASE}/auth/register`, {
     method: 'POST', headers: getHeaders(false),
     body: JSON.stringify(data)
-  }).then(r => r.json()),
+  }).then(r => r.json())
 };
 
 export const faculty = {
