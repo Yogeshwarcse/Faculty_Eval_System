@@ -1,4 +1,5 @@
-const BASE = import.meta.env.VITE_API_BASE || '/api';
+const DEFAULT_API_BASE = 'https://faculty-eval-system-1.onrender.com/api';
+const BASE = (import.meta.env.VITE_API_BASE || DEFAULT_API_BASE).replace(/\/$/, '');
 
 // Helper to get token from localStorage
 const getToken = () => {

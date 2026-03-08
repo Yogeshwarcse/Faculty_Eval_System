@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     port: Number(process.env.PORT) || 3000,
     proxy: {
-      '/api': process.env.VITE_BACKEND_URL || 'http://localhost:5000'
+      '/api': process.env.VITE_BACKEND_URL || 'https://faculty-eval-system-1.onrender.com'
     }
   }
 });
