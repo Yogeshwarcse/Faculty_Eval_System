@@ -19,7 +19,7 @@ const Shell = ({ children }) => {
   const links = isAdmin ? adminLinks : studentLinks;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f4ff', fontFamily: "'Syne', 'Helvetica Neue', sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f4ff' }}>
       {/* Sidebar */}
       <div style={{
         width: '220px', background: 'linear-gradient(180deg, #1a1735 0%, #0f0e28 100%)',

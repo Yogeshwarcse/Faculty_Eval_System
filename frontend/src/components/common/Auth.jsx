@@ -33,7 +33,7 @@ const AuthPage = () => {
   return (
     <div style={{
       minHeight: '100vh', background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Syne', 'Helvetica Neue', sans-serif",
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '20px', position: 'relative', overflow: 'hidden'
     }}>
       {/* background decorations */}

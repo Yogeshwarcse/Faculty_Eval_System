@@ -34,7 +34,6 @@ export default function App() {
   return (
     <AppProvider>
       <style>{`/* global styles */
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #f5f4ff; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
