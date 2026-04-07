@@ -70,8 +70,14 @@ const createUser = async (payload) => {
   return user;
 };
 
+const getAll = async () => {
+  await ensureInitialized();
+  return users;
+};
+
 module.exports = {
   findByEmail,
   createUser,
-  toPublicUser
+  toPublicUser,
+  getAll
 };
