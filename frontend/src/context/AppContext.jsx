@@ -47,9 +47,17 @@ export const AppProvider = ({ children }) => {
         id: item._id || item.id
       }));
 
+      const formatFeedback = (list) => (Array.isArray(list) ? list : []).map(item => ({
+        ...item,
+        id: item._id || item.id,
+        // If the backend populated these, extract the IDs for the frontend lookups
+        facultyId: item.facultyId?._id || item.facultyId?.id || item.facultyId,
+        studentId: item.studentId?._id || item.studentId?.id || item.studentId
+      }));
+
       setFaculty(format(facList));
       setStudents(format(studList));
-      setFeedback(format(feedList));
+      setFeedback(formatFeedback(feedList));
     } catch (err) {
       console.error('Error loading app data:', err);
     }
@@ -153,7 +161,14 @@ export const AppProvider = ({ children }) => {
     try {
       const response = await api.feedback.create(data);
       if (response && (response._id || response.id)) {
-        setFeedback(p => [...p, { ...response, id: response._id || response.id }]);
+        const fb = {
+          ...response,
+          id: response._id || response.id,
+          // Extract IDs in case backend returned populated objects
+          facultyId: response.facultyId?._id || response.facultyId?.id || response.facultyId,
+          studentId: response.studentId?._id || response.studentId?.id || response.studentId
+        };
+        setFeedback(p => [...p, fb]);
         return true;
       }
       return false;
