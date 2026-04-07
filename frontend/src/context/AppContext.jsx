@@ -22,7 +22,9 @@ export const AppProvider = ({ children }) => {
         if (savedToken && savedUser) {
           const userData = JSON.parse(savedUser);
           setUser(userData);
-          setPage(userData.role === 'admin' ? 'overview' : 'dashboard');
+          if (userData.role === 'admin') setPage('overview');
+          else if (userData.role === 'faculty') setPage('faculty-dashboard');
+          else setPage('dashboard');
         }
       } catch (err) {
         console.error('Failed to restore session:', err);
@@ -34,7 +36,9 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   // Fetch all app data from API
-  const loadData = async () => {
+  const loadData = async (role) => {
+    // Faculty members must not receive student or raw feedback data
+    if (role === 'faculty') return;
     try {
       const [facList, studList, feedList] = await Promise.all([
         api.faculty.list().catch(() => []),
@@ -50,7 +54,6 @@ export const AppProvider = ({ children }) => {
       const formatFeedback = (list) => (Array.isArray(list) ? list : []).map(item => ({
         ...item,
         id: item._id || item.id,
-        // If the backend populated these, extract the IDs for the frontend lookups
         facultyId: item.facultyId?._id || item.facultyId?.id || item.facultyId,
         studentId: item.studentId?._id || item.studentId?.id || item.studentId
       }));
@@ -64,13 +67,13 @@ export const AppProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (user) loadData();
+    if (user) loadData(user.role);
   }, [user]);
 
   const login = async (email, password) => {
     try {
       const response = await api.auth.login({ email, password });
-      if (response.message || !response.token) return false;
+      if (response.message || !response.token) return { success: false, error: response.message || 'Invalid credentials' };
       
       const { user: userData, token } = response;
       const formattedUser = { ...userData, id: userData._id || userData.id };
@@ -79,18 +82,20 @@ export const AppProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(formattedUser));
       
       setUser(formattedUser);
-      setPage(formattedUser.role === 'admin' ? 'overview' : 'dashboard');
-      return true;
+      if (formattedUser.role === 'admin') setPage('overview');
+      else if (formattedUser.role === 'faculty') setPage('faculty-dashboard');
+      else setPage('dashboard');
+      return { success: true };
     } catch (err) {
       console.error('Login error:', err);
-      return false;
+      return { success: false, error: 'Network error or server unavailable' };
     }
   };
 
   const register = async (data) => {
     try {
       const response = await api.auth.register(data);
-      if (response.message || !response.token) return false;
+      if (response.message || !response.token) return { success: false, error: response.message || 'Registration failed' };
       
       const { user: userData, token } = response;
       const formattedUser = { ...userData, id: userData._id || userData.id };
@@ -99,12 +104,13 @@ export const AppProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(formattedUser));
       
       setUser(formattedUser);
-      setPage('dashboard');
-      loadData();
-      return true;
+      if (formattedUser.role === 'faculty') setPage('faculty-dashboard');
+      else setPage('dashboard');
+      loadData(formattedUser.role);
+      return { success: true };
     } catch (err) {
       console.error('Register error:', err);
-      return false;
+      return { success: false, error: 'Network error or server unavailable' };
     }
   };
 

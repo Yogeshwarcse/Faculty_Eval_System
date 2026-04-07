@@ -5,7 +5,10 @@ const AuthPage = () => {
   const { login, register } = useApp();
   const [mode, setMode] = useState('login');
   const [role, setRole] = useState('student');
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '', regNo: '', department: 'CSE', year: 2 });
+  const [form, setForm] = useState({
+    name: '', email: '', password: '', confirm: '',
+    regNo: '', department: 'CSE', year: 2, facultyProfileId: ''
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -14,20 +17,28 @@ const AuthPage = () => {
   const handleSubmit = async () => {
     setError(''); setLoading(true);
     if (mode === 'login') {
-      const ok = await login(form.email, form.password);
-      if (!ok) setError('Invalid email or password.');
+      const res = await login(form.email, form.password);
+      if (!res.success) setError(res.error);
     } else {
       if (form.password !== form.confirm) { setError("Passwords don't match."); setLoading(false); return; }
       if (form.password.length < 6) { setError('Password must be at least 6 characters.'); setLoading(false); return; }
-      const ok = await register({ ...form, role });
-      if (!ok) setError('Email already registered.');
+      const payload = { ...form, role };
+      const res = await register(payload);
+      if (!res.success) setError(res.error);
     }
     setLoading(false);
   };
 
+  const ROLES = [
+    { id: 'student', label: 'Student', icon: '👨‍🎓' },
+    { id: 'faculty', label: 'Faculty', icon: '👨‍🏫' },
+    { id: 'admin', label: 'Admin', icon: '🛡' },
+  ];
+
   const demos = [
-    { label: 'Student Demo', email: 'arjun@college.edu', pass: 'pass123' },
-    { label: 'Admin Demo', email: 'admin@college.edu', pass: 'admin123' },
+    { label: 'Student', email: 'arjun@college.edu', pass: 'pass123', icon: '👨‍🎓' },
+    { label: 'Faculty', email: 'n@college.edu', pass: 'faculty123', icon: '👨‍🏫' },
+    { label: 'Admin', email: 'admin@college.edu', pass: 'admin123', icon: '🛡' },
   ];
 
   return (
@@ -36,7 +47,7 @@ const AuthPage = () => {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '20px', position: 'relative', overflow: 'hidden'
     }}>
-      {/* background decorations */}
+      {/* Background orbs */}
       {[...Array(6)].map((_, i) => (
         <div key={i} style={{
           position: 'absolute', borderRadius: '50%',
@@ -49,7 +60,7 @@ const AuthPage = () => {
       ))}
 
       <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 1 }}>
-        {/* logo and header */}
+        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{
             width: '64px', height: '64px', borderRadius: '20px',
@@ -66,7 +77,7 @@ const AuthPage = () => {
           background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)',
           border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: '32px'
         }}>
-          {/* Tabs */}
+          {/* Mode tabs */}
           <div style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', borderRadius: '12px', padding: '4px', marginBottom: '24px' }}>
             {['login', 'signup'].map(m => (
               <button key={m} onClick={() => { setMode(m); setError(''); }}
@@ -83,20 +94,29 @@ const AuthPage = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {mode === 'signup' && (
               <>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {['student', 'admin'].map(r => (
-                    <button key={r} onClick={() => setRole(r)}
-                      style={{
-                        flex: 1, padding: '8px', borderRadius: '9px',
-                        border: `1.5px solid ${role === r ? '#6366f1' : 'rgba(255,255,255,0.15)'}`,
-                        background: role === r ? 'rgba(99,102,241,0.2)' : 'transparent',
-                        color: role === r ? '#a5b4fc' : 'rgba(255,255,255,0.5)',
-                        fontWeight: 700, fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s',
-                        fontFamily: 'inherit', textTransform: 'capitalize'
-                      }}>{r}</button>
-                  ))}
+                {/* Role selector */}
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>I am a</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {ROLES.map(r => (
+                      <button key={r.id} onClick={() => setRole(r.id)}
+                        style={{
+                          flex: 1, padding: '8px 4px', borderRadius: '9px',
+                          border: `1.5px solid ${role === r.id ? '#6366f1' : 'rgba(255,255,255,0.15)'}`,
+                          background: role === r.id ? 'rgba(99,102,241,0.2)' : 'transparent',
+                          color: role === r.id ? '#a5b4fc' : 'rgba(255,255,255,0.5)',
+                          fontWeight: 700, fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s',
+                          fontFamily: 'inherit', textAlign: 'center', lineHeight: 1.4
+                        }}>
+                        <div style={{ fontSize: '16px' }}>{r.icon}</div>
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <DarkInput label="Full Name" value={form.name} onChange={set('name')} placeholder="Your name" />
+
+                <DarkInput label="Full Name" value={form.name} onChange={set('name')} placeholder="Your full name" />
+
                 {role === 'student' && (
                   <>
                     <DarkInput label="Register Number" value={form.regNo} onChange={set('regNo')} placeholder="21CSE001" />
@@ -108,8 +128,24 @@ const AuthPage = () => {
                     </div>
                   </>
                 )}
+
+                {role === 'faculty' && (
+                  <>
+                    <DarkInput label="Custom ID (from Admin)" value={form.facultyProfileId} onChange={set('facultyProfileId')} placeholder="e.g. Yogeshwar-cse-12" />
+                    <DarkSelect label="Department" value={form.department} onChange={set('department')}
+                      options={["CSE", "ECE", "IT", "MECH", "CIVIL"].map(d => ({ value: d, label: d }))} />
+                    <div style={{
+                      padding: '8px 12px', borderRadius: '9px', fontSize: '11px', lineHeight: 1.5,
+                      background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)',
+                      color: 'rgba(165,180,252,0.8)'
+                    }}>
+                      🔒 As a faculty member you will only see your own aggregated performance metrics. No student data is shown.
+                    </div>
+                  </>
+                )}
               </>
             )}
+
             <DarkInput label="Email" type="email" value={form.email} onChange={set('email')} placeholder="you@college.edu" />
             <DarkInput label="Password" type="password" value={form.password} onChange={set('password')} placeholder="••••••••" />
             {mode === 'signup' && (
@@ -126,21 +162,29 @@ const AuthPage = () => {
                 fontFamily: 'inherit', letterSpacing: '0.05em', textTransform: 'uppercase',
                 opacity: loading ? 0.7 : 1, boxShadow: '0 4px 20px rgba(99,102,241,0.4)',
                 marginTop: '4px'
-              }}>{loading ? 'Please wait...' : (mode === 'login' ? 'Sign In →' : 'Create Account →')}</button>
+              }}>{loading ? 'Please wait…' : (mode === 'login' ? 'Sign In →' : 'Create Account →')}</button>
           </div>
 
+          {/* Demo quick access */}
           {mode === 'login' && (
             <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', textAlign: 'center', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Quick Demo Access</p>
               <div style={{ display: 'flex', gap: '8px' }}>
                 {demos.map(d => (
-                  <button key={d.label} onClick={() => { setForm(p => ({ ...p, email: d.email, password: d.pass })); }}
+                  <button key={d.label}
+                    onClick={() => setForm(p => ({ ...p, email: d.email, password: d.pass }))}
                     style={{
-                      flex: 1, padding: '8px', borderRadius: '9px',
+                      flex: 1, padding: '8px 4px', borderRadius: '9px',
                       border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.04)',
-                      color: 'rgba(255,255,255,0.6)', fontSize: '11px', cursor: 'pointer',
-                      fontFamily: 'inherit', fontWeight: 600, transition: 'all 0.2s'
-                    }}>{d.label}</button>
+                      color: 'rgba(255,255,255,0.6)', fontSize: '10px', cursor: 'pointer',
+                      fontFamily: 'inherit', fontWeight: 600, transition: 'all 0.2s', textAlign: 'center', lineHeight: 1.4
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.15)'; e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
+                  >
+                    <div style={{ fontSize: '16px', marginBottom: '2px' }}>{d.icon}</div>
+                    {d.label}
+                  </button>
                 ))}
               </div>
             </div>

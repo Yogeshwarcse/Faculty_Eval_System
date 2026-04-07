@@ -4,6 +4,8 @@ import { useApp } from '../../context/AppContext';
 const Shell = ({ children }) => {
   const { user, logout, page, setPage } = useApp();
   const isAdmin = user?.role === 'admin';
+  const isFaculty = user?.role === 'faculty';
+
   const studentLinks = [
     { id: 'dashboard', label: 'Dashboard', icon: '⊞' },
     { id: 'feedback', label: 'Submit Feedback', icon: '✍' },
@@ -16,7 +18,18 @@ const Shell = ({ children }) => {
     { id: 'analytics', label: 'Analytics', icon: '📈' },
     { id: 'feedback-admin', label: 'Feedback', icon: '💬' },
   ];
-  const links = isAdmin ? adminLinks : studentLinks;
+  const facultyLinks = [
+    { id: 'faculty-dashboard', label: 'My Performance', icon: '📊' },
+  ];
+
+  const links = isAdmin ? adminLinks : isFaculty ? facultyLinks : studentLinks;
+
+  const portalLabel = isAdmin ? 'Admin Panel' : isFaculty ? 'Faculty Portal' : 'Student Portal';
+  const avatarGradient = isAdmin
+    ? 'linear-gradient(135deg, #f59e0b, #ef4444)'
+    : isFaculty
+    ? 'linear-gradient(135deg, #6366f1, #06b6d4)'
+    : 'linear-gradient(135deg, #10b981, #06b6d4)';
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f4ff' }}>
@@ -35,10 +48,24 @@ const Shell = ({ children }) => {
             }}>🎓</div>
             <div>
               <div style={{ color: '#fff', fontWeight: 800, fontSize: '14px', letterSpacing: '-0.01em' }}>EduRate</div>
-              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{isAdmin ? 'Admin Panel' : 'Student Portal'}</div>
+              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {portalLabel}
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Faculty privacy notice */}
+        {isFaculty && (
+          <div style={{
+            margin: '12px', padding: '10px 12px', borderRadius: '10px',
+            background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)'
+          }}>
+            <p style={{ color: '#a5b4fc', fontSize: '10px', lineHeight: 1.5, margin: 0 }}>
+              🔒 You can only view your own performance metrics. Student data is not accessible.
+            </p>
+          </div>
+        )}
 
         <nav style={{ padding: '16px 12px', flex: 1 }}>
           {links.map(l => (
@@ -64,13 +91,15 @@ const Shell = ({ children }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', padding: '8px 12px' }}>
             <div style={{
               width: '32px', height: '32px', borderRadius: '50%',
-              background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+              background: avatarGradient,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '12px', fontWeight: 800, color: '#fff'
             }}>{user?.name?.[0] || 'U'}</div>
             <div>
               <div style={{ color: '#fff', fontSize: '12px', fontWeight: 700 }}>{user?.name?.split(' ')[0]}</div>
-              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px' }}>{user?.email}</div>
+              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px' }}>
+                {isFaculty ? `${user?.department || ''} Faculty` : user?.email}
+              </div>
             </div>
           </div>
           <button onClick={logout} style={{

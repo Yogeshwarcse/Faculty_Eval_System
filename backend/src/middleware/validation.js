@@ -11,8 +11,18 @@ module.exports = {
   },
 
   validateFacultyData: (req, res, next) => {
-    const { name, department, subjects } = req.body;
+    const { customId, name, department, subjects } = req.body;
     
+    // Validate customId if provided
+    if (customId !== undefined) {
+      if (typeof customId !== 'string' || customId.trim().length === 0) {
+        return res.status(400).json({ 
+          message: 'Custom ID must be a non-empty string if provided' 
+        });
+      }
+      req.body.customId = customId.trim();
+    }
+
     // Validate name
     if (!name || typeof name !== 'string' || name.trim().length < 2) {
       return res.status(400).json({ 

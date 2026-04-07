@@ -1,13 +1,15 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const Faculty = require('../models/Faculty');
 const jwtUtil = require('../config/jwt');
 const mockAuthStore = require('../store/mockAuthStore');
+const mongoose = require('mongoose');
 
 const isMockAuthMode = () => process.env.MOCK_AUTH === 'true';
 
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role, regNo, department, year } = req.body;
+    const { name, email, password, role, regNo, department, year, facultyProfileId } = req.body;
     let user = null;
 
     if (isMockAuthMode()) {
@@ -19,14 +21,44 @@ exports.register = async (req, res, next) => {
     if (user) return res.status(400).json({ message: 'Email already registered' });
 
     if (isMockAuthMode()) {
-      user = await mockAuthStore.createUser({ name, email, password, role, regNo, department, year });
+      user = await mockAuthStore.createUser({ name, email, password, role, regNo, department, year, facultyProfileId });
     } else {
       const hashed = await bcrypt.hash(password, 10);
-      user = new User({ name, email, password: hashed, role, regNo, department, year });
+
+      let resolvedFacultyProfileId = null;
+
+      // If registering as faculty, validate the profile link
+      if (role === 'faculty') {
+        if (!facultyProfileId) {
+          return res.status(400).json({ message: 'Faculty Profile ID is required for faculty registration' });
+        }
+        
+        let profile = null;
+        const isObjectId = mongoose.Types.ObjectId.isValid(facultyProfileId);
+
+        // Try searching by customId OR _id (if valid ObjectId)
+        const query = isObjectId 
+          ? { $or: [{ customId: facultyProfileId }, { _id: facultyProfileId }] }
+          : { customId: facultyProfileId };
+
+        profile = await Faculty.findOne(query);
+
+        if (!profile) {
+          return res.status(400).json({ message: 'No faculty profile found with that Custom ID or Database ID' });
+        }
+        resolvedFacultyProfileId = profile._id;
+      }
+
+      user = new User({ name, email, password: hashed, role: role || 'student', regNo, department, year, facultyProfileId: resolvedFacultyProfileId });
       await user.save();
     }
 
-    const token = jwtUtil.sign({ id: user._id, role: user.role });
+    const tokenPayload = {
+      id: user._id,
+      role: user.role,
+      facultyProfileId: user.facultyProfileId || null
+    };
+    const token = jwtUtil.sign(tokenPayload);
 
     const userData = isMockAuthMode()
       ? mockAuthStore.toPublicUser(user)
@@ -51,7 +83,12 @@ exports.login = async (req, res, next) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ message: 'Invalid email or password' });
 
-    const token = jwtUtil.sign({ id: user._id, role: user.role });
+    const tokenPayload = {
+      id: user._id,
+      role: user.role,
+      facultyProfileId: user.facultyProfileId ? user.facultyProfileId.toString() : null
+    };
+    const token = jwtUtil.sign(tokenPayload);
 
     const userData = isMockAuthMode()
       ? mockAuthStore.toPublicUser(user)

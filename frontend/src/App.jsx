@@ -10,24 +10,38 @@ import FacultyManagement from './components/admin/FacultyManagement';
 import StudentManagement from './components/admin/StudentManagement';
 import Analytics from './components/admin/Analytics';
 import FeedbackAdmin from './components/admin/FeedbackAdmin';
+import FacultyDashboard from './components/faculty/FacultyDashboard';
 
 function AppContent() {
-  const { user, page, setPage } = useApp();
+  const { user, page } = useApp();
   const isAdmin = user?.role === 'admin';
+  const isFaculty = user?.role === 'faculty';
 
   const pages = {
+    // Student pages
     dashboard: <StudentDashboard />,
     feedback: <FeedbackForm />,
     history: <MySubmissions />,
+    // Admin pages
     overview: <AdminOverview />,
     faculty: <FacultyManagement />,
     students: <StudentManagement />,
     analytics: <Analytics />,
     'feedback-admin': <FeedbackAdmin />,
+    // Faculty pages
+    'faculty-dashboard': <FacultyDashboard />,
   };
 
   if (!user) return <AuthPage />;
-  return <Shell>{pages[page] || (isAdmin ? <AdminOverview /> : <StudentDashboard />)}</Shell>;
+
+  // Determine default fallback per role
+  const defaultPage = isAdmin
+    ? <AdminOverview />
+    : isFaculty
+      ? <FacultyDashboard />
+      : <StudentDashboard />;
+
+  return <Shell>{pages[page] || defaultPage}</Shell>;
 }
 
 export default function App() {

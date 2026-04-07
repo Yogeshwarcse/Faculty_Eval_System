@@ -20,6 +20,24 @@ const DEMO_USERS = [
     password: 'admin123',
     role: 'admin',
     blocked: false
+  },
+  {
+    name: 'Dr. Ramesh Kumar',
+    email: 'ramesh@college.edu',
+    password: 'faculty123',
+    role: 'faculty',
+    facultyProfileId: 'mock-fac-1',
+    department: 'CSE',
+    blocked: false
+  },
+  {
+    name: 'Dr. Priya Singh',
+    email: 'priya@college.edu',
+    password: 'faculty123',
+    role: 'faculty',
+    facultyProfileId: 'mock-fac-2',
+    department: 'ECE',
+    blocked: false
   }
 ];
 
@@ -63,11 +81,17 @@ const createUser = async (payload) => {
     regNo: payload.regNo,
     department: payload.department,
     year: payload.year,
+    facultyProfileId: payload.facultyProfileId || null,
     blocked: false
   };
 
   users.push(user);
   return user;
+};
+
+const findById = async (id) => {
+  await ensureInitialized();
+  return users.find((u) => u._id === id) || null;
 };
 
 const getAll = async () => {
@@ -77,6 +101,7 @@ const getAll = async () => {
 
 module.exports = {
   findByEmail,
+  findById,
   createUser,
   toPublicUser,
   getAll

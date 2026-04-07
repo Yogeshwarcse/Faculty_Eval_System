@@ -1,4 +1,5 @@
 const Faculty = require('../models/Faculty');
+const Feedback = require('../models/Feedback');
 const mongoose = require('mongoose');
 const mockDataStore = require('../store/mockDataStore');
 
@@ -107,3 +108,94 @@ exports.getById = async (req, res, next) => {
     next(err);
   }
 };
+
+/**
+ * GET /api/faculty/me/metrics
+ * Faculty-only: returns their own aggregated performance metrics.
+ * All student-identifiable information is stripped before responding.
+ */
+exports.getMyMetrics = async (req, res, next) => {
+  const user = req.user;
+  if (!user || user.role !== 'faculty') {
+    return res.status(403).json({ message: 'Access denied: faculty only' });
+  }
+
+  const facultyProfileId = user.facultyProfileId;
+  if (!facultyProfileId) {
+    return res.status(400).json({ message: 'No faculty profile linked to this account' });
+  }
+
+  try {
+    // --- MOCK mode path ---
+    if (mongoose.connection.readyState !== 1 && process.env.MOCK_AUTH === 'true') {
+      const facultyRecord = mockDataStore.getFaculty().find(f => f._id === facultyProfileId);
+      if (!facultyRecord) return res.status(404).json({ message: 'Faculty profile not found' });
+
+      const rawFeedback = mockDataStore.getFeedback().filter(f => f.facultyId === facultyProfileId);
+
+      return res.json(buildMetricsResponse(facultyRecord, rawFeedback));
+    }
+
+    // --- DB mode path ---
+    if (!dbCheck(res)) return;
+    const facultyRecord = await Faculty.findById(facultyProfileId).lean();
+    if (!facultyRecord) return res.status(404).json({ message: 'Faculty profile not found' });
+
+    // Fetch feedback WITHOUT populating studentId (privacy)
+    const rawFeedback = await Feedback.find({ facultyId: facultyProfileId }).lean();
+
+    return res.json(buildMetricsResponse(facultyRecord, rawFeedback));
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Builds the metrics payload — strips all student-identifiable fields.
+ */
+function buildMetricsResponse(facultyRecord, rawFeedback) {
+  const categories = ['teaching', 'knowledge', 'communication', 'punctuality'];
+  const totalResponses = rawFeedback.length;
+
+  const sums = { teaching: 0, knowledge: 0, communication: 0, punctuality: 0 };
+  rawFeedback.forEach(fb => {
+    categories.forEach(cat => {
+      sums[cat] += (fb.ratings?.[cat] || 0);
+    });
+  });
+
+  const avgRatings = {};
+  categories.forEach(cat => {
+    avgRatings[cat] = totalResponses > 0
+      ? Math.round((sums[cat] / totalResponses) * 10) / 10
+      : 0;
+  });
+
+  const overallAvg = totalResponses > 0
+    ? Math.round((categories.reduce((sum, c) => sum + avgRatings[c], 0) / categories.length) * 10) / 10
+    : 0;
+
+  // Anonymised comments — NO studentId, name, email, regNo
+  const comments = rawFeedback
+    .filter(fb => fb.comment && fb.comment.trim().length > 0)
+    .map(fb => ({
+      text: fb.comment,
+      date: fb.submittedAt || null,
+      ratings: fb.ratings
+    }));
+
+  return {
+    faculty: {
+      _id: facultyRecord._id,
+      name: facultyRecord.name,
+      department: facultyRecord.department,
+      designation: facultyRecord.designation || null,
+      subjects: facultyRecord.subjects || [],
+      avatar: facultyRecord.avatar || null
+    },
+    totalResponses,
+    overallAvg,
+    avgRatings,
+    comments
+  };
+}

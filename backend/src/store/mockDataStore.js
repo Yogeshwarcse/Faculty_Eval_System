@@ -1,6 +1,7 @@
 let faculty = [
   {
     _id: 'mock-fac-1',
+    customId: 'Ramesh-cse-12',
     name: 'Dr. Ramesh Kumar',
     email: 'ramesh@college.edu',
     department: 'CSE',
@@ -11,6 +12,7 @@ let faculty = [
   },
   {
     _id: 'mock-fac-2',
+    customId: 'Priya-ece-45',
     name: 'Dr. Priya Singh',
     email: 'priya@college.edu',
     department: 'ECE',
@@ -21,7 +23,48 @@ let faculty = [
   }
 ];
 
-let feedback = [];
+let feedback = [
+  {
+    _id: 'mock-fb-1',
+    studentId: 'mock-1',
+    facultyId: 'mock-fac-1',
+    ratings: { teaching: 5, knowledge: 5, communication: 4, punctuality: 5 },
+    comment: 'Excellent teaching style. Concepts are explained very clearly.',
+    submittedAt: new Date('2024-03-10')
+  },
+  {
+    _id: 'mock-fb-2',
+    studentId: 'mock-2',
+    facultyId: 'mock-fac-1',
+    ratings: { teaching: 4, knowledge: 5, communication: 4, punctuality: 3 },
+    comment: 'Very knowledgeable but sometimes runs over time.',
+    submittedAt: new Date('2024-03-12')
+  },
+  {
+    _id: 'mock-fb-3',
+    studentId: 'mock-3',
+    facultyId: 'mock-fac-1',
+    ratings: { teaching: 5, knowledge: 4, communication: 5, punctuality: 4 },
+    comment: 'Great lectures and always available for doubts.',
+    submittedAt: new Date('2024-03-15')
+  },
+  {
+    _id: 'mock-fb-4',
+    studentId: 'mock-1',
+    facultyId: 'mock-fac-2',
+    ratings: { teaching: 4, knowledge: 5, communication: 3, punctuality: 4 },
+    comment: 'Deep subject knowledge, communication could improve.',
+    submittedAt: new Date('2024-03-11')
+  },
+  {
+    _id: 'mock-fb-5',
+    studentId: 'mock-2',
+    facultyId: 'mock-fac-2',
+    ratings: { teaching: 5, knowledge: 5, communication: 4, punctuality: 5 },
+    comment: 'One of the best faculty members in the department.',
+    submittedAt: new Date('2024-03-14')
+  }
+];
 let students = [
   {
     _id: 'mock-1',

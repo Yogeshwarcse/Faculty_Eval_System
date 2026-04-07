@@ -41,6 +41,7 @@ export const faculty = {
   create: (d) => fetch(`${BASE}/faculty`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(d) }).then(r => r.json()),
   update: (id, d) => fetch(`${BASE}/faculty/${id}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(d) }).then(r => r.json()),
   remove: (id) => fetch(`${BASE}/faculty/${id}`, { method: 'DELETE', headers: getHeaders() }).then(r => r.json()),
+  myMetrics: () => fetch(`${BASE}/faculty/me/metrics`, { headers: getHeaders() }).then(r => r.json()),
 };
 
 export const students = {
