@@ -1,5 +1,6 @@
 const DEFAULT_API_BASE = 'https://faculty-eval-system-1.onrender.com/api';
-const BASE = (import.meta.env.VITE_API_BASE || DEFAULT_API_BASE).replace(/\/$/, '');
+const LOCAL_API_BASE = 'http://localhost:5000/api';
+const BASE = (import.meta.env.VITE_API_BASE || (import.meta.env.DEV ? LOCAL_API_BASE : DEFAULT_API_BASE)).replace(/\/$/, '');
 
 // Helper to get token from localStorage
 const getToken = () => {
@@ -28,7 +29,11 @@ export const auth = {
   register: (data) => fetch(`${BASE}/auth/register`, {
     method: 'POST', headers: getHeaders(false),
     body: JSON.stringify(data)
-  }).then(r => r.json())
+  }).then(r => r.json()),
+  updateProfile: (data) => fetch(`${BASE}/auth/profile`, {
+    method: 'PUT', headers: getHeaders(true),
+    body: JSON.stringify(data)
+  }).then(async r => r.ok ? r.json() : { error: await r.text() })
 };
 
 export const faculty = {

@@ -1,18 +1,22 @@
 const mongoose = require('mongoose');
-const { MONGO_URI } = process.env;
 
 const connectDB = async () => {
+  const MONGO_URI = process.env.MONGO_URI;
   if (!MONGO_URI) {
     throw new Error('MONGO_URI is missing. Add it to backend/.env');
   }
 
+  // Ensure 10s hangs don't happen if the database is offline
+  mongoose.set('bufferCommands', false);
+
   try {
     await mongoose.connect(MONGO_URI, {
-      serverSelectionTimeoutMS: Number(process.env.DB_CONNECT_TIMEOUT_MS) || 5000
+      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+      connectTimeoutMS: 10000,
     });
-    console.log('MongoDB connected');
+    console.log('MongoDB connected successfully');
   } catch (err) {
-    throw new Error(`Database connection error: ${err.message}`);
+    throw new Error(`Database connection failed: ${err.message}`);
   }
 };
 
